@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'><text y='.8em' font-size='10' fill='%236699ff'>🐍</text></svg>">
+<style>
+body { text-align:center; background:#000; }
+#canvas { background:#fff; }
+#output { color:#fff; }
+</style>
+<title>Snake</title>
+</head>
+<body>
+<canvas id="canvas" width="360" height="360"></canvas><br>
+<output id="output"></output>
+<script>
+const canvas = document.getElementById('canvas');
+const context = canvas.getContext('2d');
+const map = [];
+for(let y = 0; y < 30; y++) {
+	map[y] = [];
+	for(let x = 0; x < 30; x++) {
+		if(y == 0 || x == 0 || y == 29 || x == 29) {
+			map[y][x] = 'wall';
+			draw(x, y);
+		}
+	}
+}
+const snake = [{x:15, y:15}];
+let direction = 'right';
+let milliseconds = 100;
+let moving = true;
+const crunch = new Audio('https://nil-snakemania.netlify.app/music/food.mp3');
+const bonk = new Audio('https://www.myinstants.com/media/sounds/bonk_7zPAD7C.mp3');
+function clear(x, y) {
+	context.clearRect(x*12, y*12, 12, 12);
+}
+function draw(x, y, color, stroke) {
+	clear(x, y);
+	context.beginPath();
+	context.fillStyle = color ?? '#000';
+	if(color) {
+		context.arc(x*12+6, y*12+6, 5, 0, 2 * Math.PI);
+		context.fill();
+	} else {
+		context.rect(x*12+1, y*12+1, 10, 10);
+		context.fill();
+	}
+	if(stroke) {
+		context.stroke();
+	}
+}
+function spawnapple() {
+	for(let i = 0; i < 100; i++) {
+		const y = ~~(Math.random()*map.length);
+		const x = ~~(Math.random()*map[y].length);
+		if(!map[y][x]) {
+			map[y][x] = 'apple';
+			draw(x, y, '#f00', true);
+			break;
+		}
+	}
+}
+function move() {
+	const head = {x:snake[0].x, y:snake[0].y};
+	if(direction == 'left' && head.x > 0) {
+		head.x--;
+	} else if(direction == 'right' && head.x < map[head.y].length-1) {
+		head.x++;
+	} else if(direction == 'up' && head.y > 0) {
+		head.y--;
+	} else if(direction == 'down' && head.y < map.length-1) {
+		head.y++;
+	} else {
+		bonk.play();
+		moving = false;
+		return;
+	}
+	const eaten = map[head.y][head.x];
+	snake.unshift({x:head.x, y:head.y});
+	map[head.y][head.x] = 'snake';
+	draw(head.x, head.y, '#090', true);
+	if(!eaten) {
+		const tail = snake.pop();
+		map[tail.y][tail.x] = null;
+		clear(tail.x, tail.y);
+	}
+	if(snake[1]) {
+		draw(snake[1].x, snake[1].y, '#0c0', true);
+	}
+	for(let i = 1; i < snake.length; i++) {
+		if(snake[i].x == head.x && snake[i].y == head.y) {
+			for(let j = i+1; j < snake.length; j++) {
+				draw(snake[j].x, snake[j].y, '#0c0');
+			}
+			snake.length = i;
+			break;
+		}
+	}
+	if(eaten) {
+		crunch.play();
+		if(eaten == 'apple') {
+			spawnapple();
+		}
+		milliseconds -= .1;
+		if(milliseconds < 20) milliseconds = 20;
+	}
+	document.getElementById('output').value = snake.length;
+	setTimeout(move, milliseconds);
+}
+for(let y = 0; y < 30; y++) {
+	for(let x = 0; x < 30; x++) {
+		if(map[y][x]) {
+			draw(x, y);
+		}
+	}
+}
+spawnapple();
+setTimeout(move, milliseconds);
+onkeydown = e => {
+	if(e.key == 'ArrowLeft') {
+		direction = 'left';
+	} else if(e.key == 'ArrowRight') {
+		direction = 'right';
+	} else if(e.key == 'ArrowUp') {
+		direction = 'up';
+	} else if(e.key == 'ArrowDown') {
+		direction = 'down';
+	} else {
+		return;
+	}
+	if(!moving) {
+		moving = true;
+		move();
+	}
+}
+</script>
+</body>
+</html>
