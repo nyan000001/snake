@@ -30,8 +30,8 @@ const snake = [{x:15, y:15}];
 let direction = 'right';
 let milliseconds = 100;
 let moving = true;
-const crunch = new Audio('https://nil-snakemania.netlify.app/music/food.mp3');
-const bonk = new Audio('https://www.myinstants.com/media/sounds/bonk_7zPAD7C.mp3');
+const crunch = new Audio('crunch.mp3');
+const bonk = new Audio('bonk.mp3');
 function clear(x, y) {
 	context.clearRect(x*12, y*12, 12, 12);
 }
